@@ -1,0 +1,78 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Central Service API that consume 3 direfent services",
+        "title": "Central Service API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Sergei Teran",
+            "email": "steran@tribalworldwide.gt"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/",
+    "paths": {
+        "/search/{criteria}": {
+            "get": {
+                "description": "search criteria in all services",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "search criteria in all services",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "criteria that you want to find",
+                        "name": "criteria",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.StandardResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.StandardResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "origin": {
+                    "type": "string"
+                },
+                "previewUrl": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
