@@ -52,80 +52,43 @@ func searchData(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("FALLO, el criterio debe ser string")
 	}
 
-	// channel := make(chan interface{})
-	itunesArray := processItunes(criteria)
-	// go processItunes(criteria, channel)
-	tvmazeArray := processTvmaze(criteria)
-	// go processTvmaze(criteria, channel)
-	crcindArray := processCrcind(criteria)
-	// go processCrcind(criteria, channel)
+	channel := make(chan interface{})
+	go processItunes(criteria, channel)
+	go processTvmaze(criteria, channel)
+	go processCrcind(criteria, channel)
 
-	for _, iterator := range itunesArray {
-		standardResponse = append(standardResponse, StandardResponse{
-			Category:   iterator.Category,
-			Name:       iterator.Name,
-			Author:     iterator.Author,
-			PreviewURL: iterator.Author,
-			Origin:     iterator.Origin,
-		})
+	var errorCount int
+	for i := 0; i < 3; i++ {
+		response := <-channel
+		switch typeResponse := response.(type) {
+		case error:
+			errorCount = errorCount + 1
+		case []StandardResponse:
+			for _, iterator := range typeResponse {
+				standardResponse = append(standardResponse, iterator)
+			}
+		}
 	}
 
-	for _, iterator := range tvmazeArray {
-		standardResponse = append(standardResponse, StandardResponse{
-			Category:   iterator.Category,
-			Name:       iterator.Name,
-			Author:     iterator.Author,
-			PreviewURL: iterator.Author,
-			Origin:     iterator.Origin,
-		})
+	if errorCount == 3 {
+		fmt.Println("LOS ERRORES LLEGARON A 3")
+		statusReturn = http.StatusExpectationFailed
 	}
-
-	for _, iterator := range crcindArray {
-		standardResponse = append(standardResponse, StandardResponse{
-			Category:   iterator.Category,
-			Name:       iterator.Name,
-			Author:     iterator.Author,
-			PreviewURL: iterator.Author,
-			Origin:     iterator.Origin,
-		})
-	}
-
-	// // defer func() {
-	// var errorCount int
-	// // for index := 0; index < len(channel); index++ {
-	// response := <-channel
-	// switch response := response.(type) {
-	// case error:
-	// 	fmt.Println("caso 1 entro en case error")
-	// 	errorCount = errorCount + 1
-	// case []StandardResponse:
-	// 	fmt.Println("caso 2 entro for", response)
-	// 	for _, iterator := range response {
-	// 		standardResponse = append(standardResponse, iterator)
-	// 	}
-	// }
-	// // }
-
-	// if errorCount == 3 {
-	// 	fmt.Println("LOS ERRORES LLEGARON A 3")
-	// 	statusReturn = http.StatusExpectationFailed
-	// }
-	fmt.Println("TERMINA TODO")
 	// envio la respuesta al front en JSON
 	w.WriteHeader(statusReturn)
 	json.NewEncoder(w).Encode(standardResponse)
-	// }()
 }
 
-func processItunes(criteria string) []StandardResponse {
-	// channel chan interface{}
+func processItunes(criteria string, channel chan interface{}) {
 	var standardResponse []StandardResponse
 	itunesSlice, err := itunesservicego.FindResults(criteria)
 	fmt.Println("processItunes")
 
 	if err != nil {
 		fmt.Println("ITUNES FALLO", err)
-		// channel <- err
+		channel <- err
+		// close(channel)
+		return
 	}
 
 	if len(itunesSlice) > 0 {
@@ -135,25 +98,29 @@ func processItunes(criteria string) []StandardResponse {
 				Category:   iterator.Category,
 				Name:       iterator.Name,
 				Author:     iterator.Author,
-				PreviewURL: iterator.Author,
+				PreviewURL: iterator.PreviewURL,
 				Origin:     iterator.Origin,
 			})
 		}
 	}
 
-	// channel <- standardResponse
-	return standardResponse
+	channel <- standardResponse
+	// close(channel)
+	return
+	// return standardResponse
 }
 
-func processTvmaze(criteria string) []StandardResponse {
+func processTvmaze(criteria string, channel chan interface{}) {
 	// channel chan interface{}
+	// ([]StandardResponse, )
 	var standardResponse []StandardResponse
 	tvmazeSlice, err := tvmazeservicego.FindResults(criteria)
 	fmt.Println("processTvmaze")
 
 	if err != nil {
 		fmt.Println("TVMAZE FALLO", err)
-		// channel <- err
+		channel <- err
+		return
 	}
 
 	if len(tvmazeSlice) > 0 {
@@ -163,25 +130,28 @@ func processTvmaze(criteria string) []StandardResponse {
 				Category:   iterator.Category,
 				Name:       iterator.Name,
 				Author:     iterator.Author,
-				PreviewURL: iterator.Author,
+				PreviewURL: iterator.PreviewURL,
 				Origin:     iterator.Origin,
 			})
 		}
 	}
 
-	// channel <- standardResponse
-	return standardResponse
+	channel <- standardResponse
+	return
+	// return standardResponse
 }
 
-func processCrcind(criteria string) []StandardResponse {
+func processCrcind(criteria string, channel chan interface{}) {
 	// channel chan interface{}
+	// ([]StandardResponse, )
 	var standardResponse []StandardResponse
 	crcindSlice, err := crcindservicego.FindResults(criteria)
 	fmt.Println("processCrcind")
 
 	if err != nil {
 		fmt.Println("CRCIND FALLO", err)
-		// channel <- err
+		channel <- err
+		return
 	}
 
 	if len(crcindSlice) > 0 {
@@ -191,14 +161,15 @@ func processCrcind(criteria string) []StandardResponse {
 				Category:   iterator.Category,
 				Name:       iterator.Name,
 				Author:     iterator.Author,
-				PreviewURL: iterator.Author,
+				PreviewURL: iterator.PreviewURL,
 				Origin:     iterator.Origin,
 			})
 		}
 	}
 
-	// channel <- standardResponse
-	return standardResponse
+	channel <- standardResponse
+	return
+	// return standardResponse
 }
 
 // @title Central Service API
