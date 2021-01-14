@@ -7,11 +7,21 @@ API to consume three external search services
 
 Central Service API
 
-# Install
+# Install using local
 ```
 git clone https://github.com/serter95/centralServiceBackendGo.git
+cd centralServiceBackendGo
 go install
 go run main.go
+```
+
+# Install using docker
+```
+git clone https://github.com/serter95/centralServiceBackendGo.git
+cd centralServiceBackendGo
+docker pull golang:latest
+docker build -t central_service_backend:latest .
+docker run -p 3000:3000 central_service_backend:latest
 ```
 
 # Documentation
