@@ -28,20 +28,12 @@ type StandardResponse struct {
 	Origin     string `json:"origin"`
 }
 
+// ErrorResponse struct ...
 type ErrorResponse struct {
 	Description string  `json:"description"`
 	Messages    []error `json:"messages"`
 }
 
-// searchData godoc
-// @Summary search criteria in all services
-// @Description search criteria in all services
-// @Tags search
-// @Accept  json
-// @Produce  json
-// @Success 200 {array} StandardResponse
-// @Router /search/{criteria} [get]
-// @Param criteria path string true "criteria that you want to find"
 func searchData(w http.ResponseWriter, r *http.Request) {
 	// seteo los datos de la respuesta por defecto
 	w.Header().Set("Content-Type", "application/json")
@@ -181,20 +173,10 @@ func processCrcind(criteria string, channel chan interface{}) {
 	// return standardResponse
 }
 
-// @title Central Service API
-// @version 1.0
-// @description Central Service API that consume 3 direfent services
-// @termsOfService http://swagger.io/terms/
-// @contact.name Sergei Teran
-// @contact.email steran@tribalworldwide.gt
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host localhost:3000
-// @BasePath /
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	Routes(router)
+	routes(router)
 
 	port := ":3000"
 	fmt.Println("\n servidor corriendo en puerto " + port)
