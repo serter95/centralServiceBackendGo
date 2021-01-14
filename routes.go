@@ -7,7 +7,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func routes(router *mux.Router) {
+func Routes(router *mux.Router) {
 	router.HandleFunc("/search/{criteria}", searchData).Methods("GET")
 	// Swagger
 	router.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)

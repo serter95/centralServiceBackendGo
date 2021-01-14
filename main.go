@@ -28,6 +28,11 @@ type StandardResponse struct {
 	Origin     string `json:"origin"`
 }
 
+type ErrorResponse struct {
+	Description string  `json:"description"`
+	Messages    []error `json:"messages"`
+}
+
 // searchData godoc
 // @Summary search criteria in all services
 // @Description search criteria in all services
@@ -40,7 +45,6 @@ type StandardResponse struct {
 func searchData(w http.ResponseWriter, r *http.Request) {
 	// seteo los datos de la respuesta por defecto
 	w.Header().Set("Content-Type", "application/json")
-	statusReturn := http.StatusOK
 	var standardResponse []StandardResponse
 
 	// obtengo las variables del path
@@ -58,11 +62,13 @@ func searchData(w http.ResponseWriter, r *http.Request) {
 	go processCrcind(criteria, channel)
 
 	var errorCount int
+	errorDescription := make([]error, 0)
 	for i := 0; i < 3; i++ {
 		response := <-channel
 		switch typeResponse := response.(type) {
 		case error:
 			errorCount = errorCount + 1
+			errorDescription = append(errorDescription, typeResponse)
 		case []StandardResponse:
 			for _, iterator := range typeResponse {
 				standardResponse = append(standardResponse, iterator)
@@ -72,10 +78,13 @@ func searchData(w http.ResponseWriter, r *http.Request) {
 
 	if errorCount == 3 {
 		fmt.Println("LOS ERRORES LLEGARON A 3")
-		statusReturn = http.StatusExpectationFailed
+		w.WriteHeader(http.StatusBadRequest)
+		errorResponse := ErrorResponse{Description: "Fallo al realizar las peticiones", Messages: errorDescription}
+		json.NewEncoder(w).Encode(errorResponse)
+		return
 	}
 	// envio la respuesta al front en JSON
-	w.WriteHeader(statusReturn)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(standardResponse)
 }
 
@@ -185,7 +194,7 @@ func processCrcind(criteria string, channel chan interface{}) {
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	routes(router)
+	Routes(router)
 
 	port := ":3000"
 	fmt.Println("\n servidor corriendo en puerto " + port)
